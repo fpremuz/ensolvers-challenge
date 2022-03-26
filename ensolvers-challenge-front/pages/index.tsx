@@ -47,17 +47,22 @@ const Home: NextPage = () => {
       <Head>
         <title>To-Do List</title>
       </Head>
-
-      {isEditVisible && toDoEditing ? (
-        <EditToDo onCancel={onCancel} onSave={onSave} text={toDoEditing.text} />
-      ) : (
-        <ToDoList
-          onAddNewToDo={onAddNewToDo}
-          onClickCheckbox={onClickCheckbox}
-          onEdit={onEdit}
-          toDos={toDos}
-        />
-      )}
+      <div className={styles.container}>
+        {isEditVisible && toDoEditing ? (
+          <EditToDo
+            onCancel={onCancel}
+            onSave={onSave}
+            text={toDoEditing.text}
+          />
+        ) : (
+          <ToDoList
+            onAddNewToDo={onAddNewToDo}
+            onClickCheckbox={onClickCheckbox}
+            onEdit={onEdit}
+            toDos={toDos}
+          />
+        )}
+      </div>
     </div>
   );
 };
@@ -84,6 +89,10 @@ const ToDoList = ({
   onAddNewToDo,
 }: ToDoListProps) => {
   const [newTodo, setNewToDo] = useState("");
+  const onAddNewToDoHandler = () => {
+    onAddNewToDo(newTodo);
+    setNewToDo("");
+  };
 
   return (
     <div>
@@ -97,13 +106,13 @@ const ToDoList = ({
           key={toDo.id}
         />
       ))}
-      <div>
+      <div className={styles.newToDoItemContainer}>
         <input
           placeholder="New Task"
           value={newTodo}
           onChange={(e) => setNewToDo(e.target.value)}
         />
-        <button onClick={() => onAddNewToDo(newTodo)}>Add</button>
+        <button onClick={onAddNewToDoHandler}>Add</button>
       </div>
     </div>
   );
@@ -123,13 +132,13 @@ const ToDoItem = ({
   onClickCheckbox,
 }: ToDoItemProps) => {
   return (
-    <div>
+    <div className={styles.toDoItemContainer}>
       <input
         type="checkbox"
         checked={isCompleted}
         onChange={(e) => onClickCheckbox(e.target.checked)}
       />
-      <p>{text}</p>
+      <p className={styles.toDoItemText}>{text}</p>
       <button onClick={onEdit}>Edit</button>
     </div>
   );
