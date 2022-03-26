@@ -1,47 +1,49 @@
 import type { NextPage } from "next";
 import Head from "next/head";
-import Image from "next/image";
-import { type } from "os";
 import { useState } from "react";
 import styles from "../styles/Home.module.css";
+import { useQuery, useMutation } from "react-query";
+import axios from "axios";
+
+const postToDo = (todo: Omit<ToDoData, "id">) => axios.post("/api/todos", todo);
+const putToDo = (id: string, todo: Omit<ToDoData, "id">) =>
+  axios.put(`/api/todos/${id}`, todo);
 
 const Home: NextPage = () => {
   const [isEditVisible, setIsEditVisible] = useState(false);
-  const [toDos, setToDos] = useState<ToDoData[]>([]);
+  const { data: toDos, refetch } = useQuery("todos", () =>
+    axios.get<ToDoData[]>("/api/todos").then((res) => res.data)
+  );
   const [toDoEditing, setToDoEditing] = useState<ToDoData>();
   const onAddNewToDo = (text: string) => {
-    setToDos((prevTodos) => [
-      ...prevTodos,
-      { id: `${prevTodos.length + 1}`, text, isCompleted: false },
-    ]);
+    postToDo({ isCompleted: false, text });
+    refetch();
   };
   const onClickCheckbox = (id: string, isCompleted: boolean) => {
-    setToDos((prevTodos) =>
-      prevTodos.map((toDo) =>
-        toDo.id === id ? { ...toDo, isCompleted } : toDo
-      )
-    );
+    const toDoEditing = toDos?.find((toDo) => toDo.id === id);
+    if (toDoEditing === undefined) throw Error();
+    putToDo(toDoEditing.id, { ...toDoEditing, isCompleted });
+    setIsEditVisible(false);
+    refetch();
   };
   const onEdit = (id: string) => {
-    const editToDo = toDos.find((toDo) => toDo.id === id);
+    const editToDo = toDos?.find((toDo) => toDo.id === id);
     if (editToDo === undefined) throw Error();
     setToDoEditing(editToDo);
     setIsEditVisible(true);
   };
 
   const onSave = (text: string) => {
-    const id = toDoEditing?.id;
-    if (id === undefined) throw Error();
-    setToDos((prevTodos) =>
-      prevTodos.map((toDo) => (toDo.id === id ? { ...toDo, text } : toDo))
-    );
+    if (toDoEditing === undefined) throw Error();
+    putToDo(toDoEditing.id, { ...toDoEditing, text });
     setIsEditVisible(false);
+    refetch();
   };
 
   const onCancel = () => {
     setIsEditVisible(false);
   };
-
+  if (toDos === undefined) return <div>Loading...</div>;
   return (
     <div>
       <Head>
